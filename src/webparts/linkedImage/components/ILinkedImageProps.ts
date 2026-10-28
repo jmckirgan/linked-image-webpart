@@ -1,4 +1,12 @@
-export type LinkedImageAlignment = 'left' | 'centre' | 'right';
+export type LinkedImageAlignment =
+  'left' |
+  'centre' |
+  'right';
+
+export type CaptionAlignment =
+  'left' |
+  'centre' |
+  'right';
 
 export interface ILinkedImageProps {
   imageUrl: string;
@@ -10,4 +18,8 @@ export interface ILinkedImageProps {
   alignment: LinkedImageAlignment;
   roundedCorners: boolean;
   enableHoverEffect: boolean;
+
+  captionText: string;
+  captionFontSize: number;
+  captionAlignment: CaptionAlignment;
 }

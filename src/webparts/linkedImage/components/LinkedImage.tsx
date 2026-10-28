@@ -11,21 +11,54 @@ const LinkedImage: React.FC<ILinkedImageProps> = ({
   imageWidth,
   alignment,
   roundedCorners,
-  enableHoverEffect
+  enableHoverEffect,
+  captionText,
+  captionFontSize,
+  captionAlignment
 }) => {
 
-  const hasImage: boolean = imageUrl.trim().length > 0;
-  const hasLink: boolean = linkUrl.trim().length > 0;
+  const hasImage: boolean =
+    imageUrl.trim().length > 0;
+
+  const hasLink: boolean =
+    linkUrl.trim().length > 0;
+
+  const hasCaption: boolean =
+    captionText.trim().length > 0;
 
   const containerClassName: string = [
     styles.linkedImage,
-    styles[alignment]
-  ].join(' ');
+    alignment === 'left'
+      ? styles.left
+      : alignment === 'right'
+        ? styles.right
+        : styles.centre
+  ]
+    .filter(Boolean)
+    .join(' ');
 
-  const imageClassName: string = [
-    styles.image,
-    roundedCorners ? styles.rounded : '',
-    enableHoverEffect ? styles.hoverEffect : ''
+  const cardClassName: string = [
+    styles.card,
+    roundedCorners
+      ? styles.roundedCard
+      : '',
+    enableHoverEffect
+      ? styles.hoverEffect
+      : ''
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const captionAlignmentClass: string =
+    captionAlignment === 'left'
+      ? styles.captionLeft
+      : captionAlignment === 'right'
+        ? styles.captionRight
+        : styles.captionCentre;
+
+  const captionClassName: string = [
+    styles.caption,
+    captionAlignmentClass
   ]
     .filter(Boolean)
     .join(' ');
@@ -33,6 +66,7 @@ const LinkedImage: React.FC<ILinkedImageProps> = ({
   if (!hasImage) {
     return (
       <div className={styles.placeholder}>
+
         <div
           className={styles.placeholderIcon}
           aria-hidden="true"
@@ -45,40 +79,73 @@ const LinkedImage: React.FC<ILinkedImageProps> = ({
         </div>
 
         <div className={styles.placeholderText}>
-          Open the web-part properties and enter an image URL.
+          Open the web-part properties and choose an image.
         </div>
+
       </div>
     );
   }
 
-  const image = (
-    <img
-      className={imageClassName}
-      src={imageUrl}
-      alt={altText || ''}
-      title={tooltip || undefined}
+  const cardContent = (
+    <div
+      className={cardClassName}
       style={{
         width: `${imageWidth}px`,
         maxWidth: '100%'
       }}
-    />
+    >
+
+      <img
+        className={styles.image}
+        src={imageUrl}
+        alt={altText || ''}
+        title={tooltip || undefined}
+      />
+
+      {hasCaption && (
+        <div
+          className={captionClassName}
+          style={{
+            fontSize: `${captionFontSize}px`
+          }}
+        >
+          {captionText}
+        </div>
+      )}
+
+    </div>
   );
 
   return (
     <div className={containerClassName}>
+
       {hasLink ? (
         <a
           className={styles.imageLink}
           href={linkUrl}
-          target={openInNewTab ? '_blank' : '_self'}
-          rel={openInNewTab ? 'noopener noreferrer' : undefined}
-          aria-label={altText || tooltip || 'Open link'}
+          target={
+            openInNewTab
+              ? '_blank'
+              : '_self'
+          }
+          rel={
+            openInNewTab
+              ? 'noopener noreferrer'
+              : undefined
+          }
+          aria-label={
+            altText ||
+            captionText ||
+            tooltip ||
+            'Open link'
+          }
         >
-          {image}
+          {cardContent}
         </a>
       ) : (
-        image
+        cardContent
       )}
+
     </div>
   );
 };

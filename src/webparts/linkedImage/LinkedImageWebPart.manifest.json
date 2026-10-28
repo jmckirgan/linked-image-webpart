@@ -34,7 +34,10 @@
       "imageWidth": 600,
       "alignment": "left",
       "roundedCorners": false,
-      "enableHoverEffect": true
+      "enableHoverEffect": true,
+      "captionText": "",
+"captionFontSize": 18,
+"captionAlignment": "centre"
     }
   }
 ]
