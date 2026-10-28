@@ -1,0 +1,41 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "c40b98cb-fa4e-43eb-963a-1e0209677b09",
+  "alias": "LinkedImageWebPart",
+  "componentType": "WebPart",
+
+  
+  "version": "*",
+  "manifestVersion": 2,
+
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab", "SharePointFullPage"],
+  "supportsThemeVariants": true,
+
+  "preconfiguredEntries": [
+  {
+    "groupId": "cf066440-0614-43d6-98ae-0b31cf14c7c3",
+    "group": {
+      "default": "Text, media, and content"
+    },
+    "title": {
+      "default": "Linked Image"
+    },
+    "description": {
+      "default": "Displays an image that links directly to another location without opening the SharePoint lightbox."
+    },
+    "officeFabricIconFontName": "Photo2",
+    "properties": {
+      "imageUrl": "",
+      "linkUrl": "",
+      "altText": "",
+      "tooltip": "",
+      "openInNewTab": false,
+      "imageWidth": 600,
+      "alignment": "left",
+      "roundedCorners": false,
+      "enableHoverEffect": true
+    }
+  }
+]
+}

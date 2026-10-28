@@ -1,0 +1,177 @@
+import * as React from 'react';
+import * as ReactDom from 'react-dom';
+
+import {
+  IPropertyPaneConfiguration,
+  PropertyPaneDropdown,
+  PropertyPaneSlider,
+  PropertyPaneTextField,
+  PropertyPaneToggle
+} from '@microsoft/sp-property-pane';
+
+import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
+
+import { PropertyFieldFilePicker, IFilePickerResult } from '@pnp/spfx-property-controls/lib/PropertyFieldFilePicker';
+
+
+
+import LinkedImage from './components/LinkedImage';
+import {
+  ILinkedImageProps,
+  LinkedImageAlignment
+} from './components/ILinkedImageProps';
+
+export interface ILinkedImageWebPartProps {
+  imageUrl: string;
+  filePickerResult?: IFilePickerResult;
+  linkUrl: string;
+  altText: string;
+  tooltip: string;
+  openInNewTab: boolean;
+  imageWidth: number;
+  alignment: LinkedImageAlignment;
+  roundedCorners: boolean;
+  enableHoverEffect: boolean;
+}
+
+export default class LinkedImageWebPart
+  extends BaseClientSideWebPart<ILinkedImageWebPartProps> {
+
+  public render(): void {
+    const element: React.ReactElement<ILinkedImageProps> =
+      React.createElement(LinkedImage, {
+        imageUrl: this.properties.imageUrl || '',
+        linkUrl: this.properties.linkUrl || '',
+        altText: this.properties.altText || '',
+        tooltip: this.properties.tooltip || '',
+        openInNewTab: this.properties.openInNewTab ?? false,
+        imageWidth: this.properties.imageWidth || 600,
+        alignment: this.properties.alignment || 'left',
+        roundedCorners: this.properties.roundedCorners ?? false,
+        enableHoverEffect: this.properties.enableHoverEffect ?? true
+      });
+
+    ReactDom.render(element, this.domElement);
+  }
+
+  protected onInit(): Promise<void> {
+    if (this.properties.openInNewTab === undefined) {
+      this.properties.openInNewTab = false;
+    }
+
+    if (this.properties.imageWidth === undefined) {
+      this.properties.imageWidth = 600;
+    }
+
+    if (this.properties.alignment === undefined) {
+      this.properties.alignment = 'left';
+    }
+
+    if (this.properties.roundedCorners === undefined) {
+      this.properties.roundedCorners = false;
+    }
+
+    if (this.properties.enableHoverEffect === undefined) {
+      this.properties.enableHoverEffect = true;
+    }
+
+    return super.onInit();
+  }
+
+  protected onDispose(): void {
+    ReactDom.unmountComponentAtNode(this.domElement);
+  }
+
+  protected getPropertyPaneConfiguration():
+    IPropertyPaneConfiguration {
+
+    return {
+      pages: [
+        {
+          header: {
+            description:
+              'Configure the linked image. The link opens directly without the SharePoint image lightbox.'
+          },
+          groups: [
+            {
+              groupName: 'Image',
+              groupFields: [
+                PropertyPaneTextField('imageUrl', {
+                  label: 'Image URL',
+                  description:
+                    'Enter the full URL of an image that page visitors can access.'
+                }),
+
+                PropertyPaneTextField('altText', {
+                  label: 'Alternative text',
+                  description:
+                    'Describe the purpose or content of the image.'
+                }),
+
+                PropertyPaneTextField('tooltip', {
+                  label: 'Tooltip',
+                  description:
+                    'Optional text displayed when a pointer rests over the image.'
+                }),
+
+                PropertyPaneSlider('imageWidth', {
+                  label: 'Image width',
+                  min: 100,
+                  max: 1600,
+                  step: 10,
+                  showValue: true
+                }),
+
+                PropertyPaneDropdown('alignment', {
+                  label: 'Alignment',
+                  options: [
+                    {
+                      key: 'left',
+                      text: 'Left'
+                    },
+                    {
+                      key: 'centre',
+                      text: 'Centre'
+                    },
+                    {
+                      key: 'right',
+                      text: 'Right'
+                    }
+                  ]
+                }),
+
+                PropertyPaneToggle('roundedCorners', {
+                  label: 'Rounded corners',
+                  onText: 'On',
+                  offText: 'Off'
+                }),
+
+                PropertyPaneToggle('enableHoverEffect', {
+                  label: 'Hover effect',
+                  onText: 'On',
+                  offText: 'Off'
+                })
+              ]
+            },
+            {
+              groupName: 'Link',
+              groupFields: [
+                PropertyPaneTextField('linkUrl', {
+                  label: 'Destination URL',
+                  description:
+                    'Enter the page, document or website that should open.'
+                }),
+
+                PropertyPaneToggle('openInNewTab', {
+                  label: 'Open in a new tab',
+                  onText: 'Yes',
+                  offText: 'No'
+                })
+              ]
+            }
+          ]
+        }
+      ]
+    };
+  }
+}

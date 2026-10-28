@@ -1,0 +1,19 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "linked-image-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/linkedImage/LinkedImageWebPart.js",
+          "manifest": "./src/webparts/linkedImage/LinkedImageWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "LinkedImageWebPartStrings": "lib/webparts/linkedImage/loc/{locale}.js",
+    "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
+  }
+}

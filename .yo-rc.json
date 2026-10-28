@@ -1,0 +1,19 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "useGulp": false,
+    "plusBeta": false,
+    "isCreatingSolution": true,
+    "nodeVersion": "22.23.1",
+    "sdksVersions": {},
+    "version": "1.23.2",
+    "libraryName": "linked-image",
+    "libraryId": "afa40f21-1100-48a6-857d-f989ea96f06e",
+    "environment": "spo",
+    "packageManager": "npm",
+    "solutionName": "linked-image",
+    "solutionShortDescription": "linked-image description",
+    "skipFeatureDeployment": true,
+    "isDomainIsolated": false,
+    "componentType": "webpart"
+  }
+}
