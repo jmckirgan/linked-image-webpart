@@ -11,15 +11,18 @@ import {
 
 import { BaseClientSideWebPart } from '@microsoft/sp-webpart-base';
 
-import { PropertyFieldFilePicker, IFilePickerResult } from '@pnp/spfx-property-controls/lib/PropertyFieldFilePicker';
-
-
+import {
+  PropertyFieldFilePicker,
+  IFilePickerResult
+} from '@pnp/spfx-property-controls/lib/PropertyFieldFilePicker';
 
 import LinkedImage from './components/LinkedImage';
+
 import {
   ILinkedImageProps,
   LinkedImageAlignment
 } from './components/ILinkedImageProps';
+
 
 export interface ILinkedImageWebPartProps {
   imageUrl: string;
@@ -33,6 +36,7 @@ export interface ILinkedImageWebPartProps {
   roundedCorners: boolean;
   enableHoverEffect: boolean;
 }
+
 
 export default class LinkedImageWebPart
   extends BaseClientSideWebPart<ILinkedImageWebPartProps> {
@@ -51,8 +55,12 @@ export default class LinkedImageWebPart
         enableHoverEffect: this.properties.enableHoverEffect ?? true
       });
 
-    ReactDom.render(element, this.domElement);
+    ReactDom.render(
+      element,
+      this.domElement
+    );
   }
+
 
   protected onInit(): Promise<void> {
     if (this.properties.openInNewTab === undefined) {
@@ -78,9 +86,11 @@ export default class LinkedImageWebPart
     return super.onInit();
   }
 
+
   protected onDispose(): void {
     ReactDom.unmountComponentAtNode(this.domElement);
   }
+
 
   protected getPropertyPaneConfiguration():
     IPropertyPaneConfiguration {
@@ -92,81 +102,216 @@ export default class LinkedImageWebPart
             description:
               'Configure the linked image. The link opens directly without the SharePoint image lightbox.'
           },
+
           groups: [
             {
               groupName: 'Image',
+
               groupFields: [
-                PropertyPaneTextField('imageUrl', {
-                  label: 'Image URL',
-                  description:
-                    'Enter the full URL of an image that page visitors can access.'
-                }),
 
-                PropertyPaneTextField('altText', {
-                  label: 'Alternative text',
-                  description:
-                    'Describe the purpose or content of the image.'
-                }),
+                PropertyFieldFilePicker(
+                  'filePickerResult',
+                  {
+                    context: this.context as any,
 
-                PropertyPaneTextField('tooltip', {
-                  label: 'Tooltip',
-                  description:
-                    'Optional text displayed when a pointer rests over the image.'
-                }),
+                    filePickerResult:
+                      this.properties.filePickerResult as IFilePickerResult,
 
-                PropertyPaneSlider('imageWidth', {
-                  label: 'Image width',
-                  min: 100,
-                  max: 1600,
-                  step: 10,
-                  showValue: true
-                }),
+                    onPropertyChange:
+                      this.onPropertyPaneFieldChanged.bind(this),
 
-                PropertyPaneDropdown('alignment', {
-                  label: 'Alignment',
-                  options: [
-                    {
-                      key: 'left',
-                      text: 'Left'
+                    properties:
+                      this.properties,
+
+                    onSave: (
+                      result: IFilePickerResult
+                    ) => {
+                      this.properties.filePickerResult =
+                        result;
+
+                      if (result.fileAbsoluteUrl) {
+                        this.properties.imageUrl =
+                          result.fileAbsoluteUrl;
+
+                        this.render();
+
+                        this.context.propertyPane.refresh();
+                      }
                     },
-                    {
-                      key: 'centre',
-                      text: 'Centre'
+
+                    onChanged: (
+                      result: IFilePickerResult
+                    ) => {
+                      this.properties.filePickerResult =
+                        result;
                     },
-                    {
-                      key: 'right',
-                      text: 'Right'
-                    }
-                  ]
-                }),
 
-                PropertyPaneToggle('roundedCorners', {
-                  label: 'Rounded corners',
-                  onText: 'On',
-                  offText: 'Off'
-                }),
+                    key:
+                      'linkedImageFilePicker',
 
-                PropertyPaneToggle('enableHoverEffect', {
-                  label: 'Hover effect',
-                  onText: 'On',
-                  offText: 'Off'
-                })
+                    label:
+                      'Choose image',
+
+                    buttonLabel:
+                      'Browse for image',
+
+                    accepts: [
+                      '.jpg',
+                      '.jpeg',
+                      '.png',
+                      '.gif',
+                      '.webp',
+                      '.svg'
+                    ],
+
+                    hideWebSearchTab: true,
+
+                    hideLocalUploadTab: true,
+
+                    includePageLibraries: false
+                  }
+                ),
+
+
+                PropertyPaneTextField(
+                  'imageUrl',
+                  {
+                    label:
+                      'Or enter an image URL',
+
+                    description:
+                      'Optional: paste an image URL manually instead of using Browse.'
+                  }
+                ),
+
+
+                PropertyPaneTextField(
+                  'altText',
+                  {
+                    label:
+                      'Alternative text',
+
+                    description:
+                      'Describe the purpose or content of the image.'
+                  }
+                ),
+
+
+                PropertyPaneTextField(
+                  'tooltip',
+                  {
+                    label:
+                      'Tooltip',
+
+                    description:
+                      'Optional text displayed when a pointer rests over the image.'
+                  }
+                ),
+
+
+                PropertyPaneSlider(
+                  'imageWidth',
+                  {
+                    label:
+                      'Image width',
+
+                    min: 100,
+
+                    max: 1600,
+
+                    step: 10,
+
+                    showValue: true
+                  }
+                ),
+
+
+                PropertyPaneDropdown(
+                  'alignment',
+                  {
+                    label:
+                      'Alignment',
+
+                    options: [
+                      {
+                        key: 'left',
+                        text: 'Left'
+                      },
+                      {
+                        key: 'centre',
+                        text: 'Centre'
+                      },
+                      {
+                        key: 'right',
+                        text: 'Right'
+                      }
+                    ]
+                  }
+                ),
+
+
+                PropertyPaneToggle(
+                  'roundedCorners',
+                  {
+                    label:
+                      'Rounded corners',
+
+                    onText:
+                      'On',
+
+                    offText:
+                      'Off'
+                  }
+                ),
+
+
+                PropertyPaneToggle(
+                  'enableHoverEffect',
+                  {
+                    label:
+                      'Hover effect',
+
+                    onText:
+                      'On',
+
+                    offText:
+                      'Off'
+                  }
+                )
               ]
             },
+
+
             {
               groupName: 'Link',
-              groupFields: [
-                PropertyPaneTextField('linkUrl', {
-                  label: 'Destination URL',
-                  description:
-                    'Enter the page, document or website that should open.'
-                }),
 
-                PropertyPaneToggle('openInNewTab', {
-                  label: 'Open in a new tab',
-                  onText: 'Yes',
-                  offText: 'No'
-                })
+              groupFields: [
+
+                PropertyPaneTextField(
+                  'linkUrl',
+                  {
+                    label:
+                      'Destination URL',
+
+                    description:
+                      'Enter the page, document or website that should open.'
+                  }
+                ),
+
+
+                PropertyPaneToggle(
+                  'openInNewTab',
+                  {
+                    label:
+                      'Open in a new tab',
+
+                    onText:
+                      'Yes',
+
+                    offText:
+                      'No'
+                  }
+                )
               ]
             }
           ]
