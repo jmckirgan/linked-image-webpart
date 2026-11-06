@@ -24,6 +24,11 @@ import {
   LinkedImageAlignment
 } from './components/ILinkedImageProps';
 
+import {
+  SPHttpClient,
+  SPHttpClientResponse
+} from '@microsoft/sp-http';
+
 
 export interface ILinkedImageWebPartProps {
   imageUrl: string;
@@ -113,7 +118,181 @@ if (this.properties.captionAlignment === undefined) {
     ReactDom.unmountComponentAtNode(this.domElement);
   }
 
+private async uploadImageToSiteAssets(
+  pickerResult: IFilePickerResult
+): Promise<string> {
 
+  const file: File =
+    await pickerResult.downloadFileContent();
+
+  if (!file) {
+    throw new Error(
+      'The selected upload could not be read.'
+    );
+  }
+
+  const webUrl: string =
+    this.context.pageContext.web.absoluteUrl;
+
+  const webServerRelativeUrl: string =
+    this.context.pageContext.web.serverRelativeUrl === '/'
+      ? ''
+      : this.context.pageContext.web.serverRelativeUrl;
+
+  const targetFolderServerRelativeUrl: string =
+    `${webServerRelativeUrl}/SiteAssets/Linked Images`;
+
+  /*
+   * Ensure the Linked Images folder exists.
+   *
+   * A failure is ignored here because SharePoint returns
+   * an error if the folder already exists.
+   */
+  const createFolderUrl: string =
+    `${webUrl}/_api/web/folders/addUsingPath(decodedurl='` +
+    `${this.escapeODataValue(targetFolderServerRelativeUrl)}')`;
+
+  const createFolderResponse: SPHttpClientResponse =
+    await this.context.spHttpClient.post(
+      createFolderUrl,
+      SPHttpClient.configurations.v1,
+      {
+        headers: {
+          Accept:
+            'application/json;odata.metadata=none'
+        }
+      }
+    );
+
+  if (
+    !createFolderResponse.ok &&
+    createFolderResponse.status !== 409
+  ) {
+    const folderError: string =
+      await createFolderResponse.text();
+
+    /*
+     * Do not stop if SharePoint reports that the folder
+     * already exists.
+     */
+    if (
+      folderError
+        .toLowerCase()
+        .indexOf('already exists') === -1
+    ) {
+      throw new Error(
+        `The Linked Images folder could not be created. ` +
+        `${folderError}`
+      );
+    }
+  }
+
+  const safeFileName: string =
+    this.createSafeFileName(file.name);
+
+  const escapedFolderUrl: string =
+    this.escapeODataValue(
+      targetFolderServerRelativeUrl
+    );
+
+  const escapedFileName: string =
+    this.escapeODataValue(safeFileName);
+
+  const uploadUrl: string =
+    `${webUrl}/_api/web/` +
+    `getfolderbyserverrelativeurl('${escapedFolderUrl}')/` +
+    `files/add(overwrite=true,url='${escapedFileName}')`;
+
+  const uploadResponse: SPHttpClientResponse =
+    await this.context.spHttpClient.post(
+      uploadUrl,
+      SPHttpClient.configurations.v1,
+      {
+        body: file,
+        headers: {
+          Accept:
+            'application/json;odata.metadata=none'
+        }
+      }
+    );
+
+  if (!uploadResponse.ok) {
+    const uploadError: string =
+      await uploadResponse.text();
+
+    throw new Error(
+      `The image could not be uploaded. ${uploadError}`
+    );
+  }
+
+  /*
+   * Return an encoded absolute URL suitable for use
+   * as the image src value.
+   */
+  const encodedFolderPath: string =
+    targetFolderServerRelativeUrl
+      .split('/')
+      .map((part: string): string =>
+        encodeURIComponent(part)
+      )
+      .join('/');
+
+  const encodedFileName: string =
+    encodeURIComponent(safeFileName);
+
+  return (
+    `${window.location.origin}` +
+    `${encodedFolderPath}/` +
+    `${encodedFileName}`
+  );
+}
+
+private escapeODataValue(
+  value: string
+): string {
+  return value.replace(/'/g, "''");
+}
+
+
+private createSafeFileName(
+  originalFileName: string
+): string {
+
+  const cleanedFileName: string =
+    originalFileName
+      .trim()
+      .replace(/[~"#%&*:<>?/\\{|}]/g, '-')
+      .replace(/\s+/g, ' ');
+
+  const lastDotIndex: number =
+    cleanedFileName.lastIndexOf('.');
+
+  const baseName: string =
+    lastDotIndex > 0
+      ? cleanedFileName.substring(
+          0,
+          lastDotIndex
+        )
+      : cleanedFileName;
+
+  const extension: string =
+    lastDotIndex > 0
+      ? cleanedFileName.substring(
+          lastDotIndex
+        )
+      : '';
+
+  /*
+   * Add a timestamp so that two uploads with the same
+   * name do not accidentally replace one another.
+   */
+  const timestamp: string =
+    new Date()
+      .toISOString()
+      .replace(/[-:.TZ]/g, '');
+
+  return `${baseName}-${timestamp}${extension}`;
+}
   protected getPropertyPaneConfiguration():
     IPropertyPaneConfiguration {
 
@@ -134,6 +313,8 @@ if (this.properties.captionAlignment === undefined) {
                 PropertyFieldFilePicker(
                   'filePickerResult',
                   {
+                    // PnP FilePicker currently exposes a conflicting SPFx context type.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
                     context: this.context as any,
 
                     filePickerResult:
@@ -145,19 +326,36 @@ if (this.properties.captionAlignment === undefined) {
                     properties:
                       this.properties,
 
-                    onSave: (
+                    onSave: async (
                       result: IFilePickerResult
-                    ) => {
-                      this.properties.filePickerResult =
-                        result;
+                    ): Promise<void> => {
+                      this.properties.filePickerResult = result;
 
-                      if (result.fileAbsoluteUrl) {
-                        this.properties.imageUrl =
-                          result.fileAbsoluteUrl;
+                      try {
+                        if (result.fileAbsoluteUrl) {
+                          this.properties.imageUrl = result.fileAbsoluteUrl;
+                        } else {
+                          this.properties.imageUrl =
+                            await this.uploadImageToSiteAssets(result);
+                        }
 
                         this.render();
-
                         this.context.propertyPane.refresh();
+                      } catch (error: unknown) {
+                        const errorMessage: string =
+                          error instanceof Error
+                            ? error.message
+                            : 'An unknown upload error occurred.';
+
+                        console.error(
+                          'Linked Image upload failed:',
+                          errorMessage
+                        );
+
+                        window.alert(
+                          `The image could not be uploaded.\n\n` +
+                          `${errorMessage}`
+                        );
                       }
                     },
 
@@ -188,7 +386,7 @@ if (this.properties.captionAlignment === undefined) {
 
                     hideWebSearchTab: true,
 
-                    hideLocalUploadTab: true,
+                    hideLocalUploadTab: false,
 
                     includePageLibraries: false
                   }
