@@ -58,7 +58,7 @@ export default class LinkedImageWebPart
         altText: this.properties.altText || '',
         tooltip: this.properties.tooltip || '',
         openInNewTab: this.properties.openInNewTab ?? false,
-        imageWidth: this.properties.imageWidth || 600,
+        imageWidth: this.properties.imageWidth || 300,
         alignment: this.properties.alignment || 'left',
         roundedCorners: this.properties.roundedCorners ?? false,
         enableHoverEffect: this.properties.enableHoverEffect ?? true,
@@ -85,7 +85,7 @@ captionAlignment:
     }
 
     if (this.properties.imageWidth === undefined) {
-      this.properties.imageWidth = 600;
+      this.properties.imageWidth = 300;
     }
 
     if (this.properties.alignment === undefined) {
@@ -385,7 +385,7 @@ private createSafeFileName(
                     ],
 
                     hideWebSearchTab: true,
-
+hideOneDriveTab: true,
                     hideLocalUploadTab: false,
 
                     includePageLibraries: false
